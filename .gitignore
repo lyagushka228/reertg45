@@ -71,3 +71,12 @@ dmypy.json
 .idea/
 *.sublime-project
 *.sublime-workspace
+
+# Local environment variables
+.env
+
+# Logs and databases
+bot.log
+users.db
+*.log
+*.db
