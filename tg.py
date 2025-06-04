@@ -175,16 +175,6 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
-def format_perplexity_markdown_for_telegram(text: str) -> str:
-    # Заменяем markdown-ссылки [текст](url) на "текст: url"
-    text = re.sub(r'\[([^\[\]]+)\]\((https?://[^\s\)]+)\)', r'\1: \2', text)
-    # Заменяем ссылки вида [1] и т.д. на "1."
-    text = re.sub(r'\[(\d+)\]', r'\1.', text)
-    # Экранируем *, _, [, ] для Markdown
-    text = re.sub(r'([\*\_\[\]])', r'\\\1', text)
-    # Удаляем лишние пустые строки
-    text = re.sub(r'\n{3,}', '\n\n', text)
-    return text
 
 def format_perplexity_markdown_for_telegram(text: str) -> str:
     # 1. Убираем все # и --- (заголовки и разделители)
