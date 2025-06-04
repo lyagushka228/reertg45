@@ -240,7 +240,9 @@ async def handle_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_path = os.path.join(BASE_DIR, f"voice_search_{user.id}.ogg")
         await file.download_to_drive(custom_path=file_path)
         with open(file_path, "rb") as audio_file:
-            transcript = openai.Audio.transcribe("whisper-1", audio_file)
+            transcript = await asyncio.to_thread(
+                openai.Audio.transcribe, "whisper-1", audio_file
+            )
             prompt = transcript["text"].strip()
         os.remove(file_path)
     else:
@@ -845,7 +847,9 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_path = os.path.join(BASE_DIR, f"voice_{user.id}.ogg")
         await file.download_to_drive(custom_path=file_path)
         with open(file_path, "rb") as audio_file:
-            transcript = openai.Audio.transcribe("whisper-1", audio_file)
+            transcript = await asyncio.to_thread(
+                openai.Audio.transcribe, "whisper-1", audio_file
+            )
             user_text = transcript["text"].strip()
         os.remove(file_path)
         if len(user_text) > MAX_TEXT_LENGTH:
