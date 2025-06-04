@@ -442,7 +442,7 @@ async def process_gpt_request(user_id: int, user_message: str, update: Update, c
     messages = user_context[user_id]
     messages.append({"role": "user", "content": user_message})
     try:
-        response = openai.ChatCompletion.create(
+        response = await openai.ChatCompletion.acreate(
             model=GPT_MODEL,
             messages=list(messages)
         )
