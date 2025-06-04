@@ -456,26 +456,24 @@ async def process_gpt_request(user_id: int, user_message: str, update: Update, c
 async def call_gpt_api(user_id: int, user_message: str, update: Update, context: ContextTypes.DEFAULT_TYPE):
     await gpt_queue.put((user_id, user_message, update, context))
 
-def call_gpt_api_multimodal(user_id: int, content: list) -> str:
-    """
-    Мультимодальный запрос: всегда обрезаем историю!
-    Отправляем только последний запрос пользователя с картинкой.
-    """
-    # Обрезаем контекст: только последний мультимодальный input (картинка/подпись)
-    messages = []
-    # Можно добавить system message при необходимости, например:
-    # messages.append({"role": "system", "content": "You are a helpful assistant."})
+async def call_gpt_api_multimodal(user_id: int, content: list) -> str:
+    """Отправляет мультимодальный запрос к GPT.
 
-    # content — это список, в котором может быть и подпись (text), и картинка (image_url)
-    messages.append({"role": "user", "content": content})
+    Ранее функция была синхронной и вызывала API напрямую, из-за чего
+    блокировался событийный цикл asyncio. Теперь запрос выполняется
+    асинхронно через ``openai.ChatCompletion.acreate``.
+    """
+
+    # Для мультимодального запроса не сохраняем историю, отправляем только
+    # текущее сообщение пользователя (подпись + изображение).
+    messages = [{"role": "user", "content": content}]
 
     try:
-        response = openai.ChatCompletion.create(
+        response = await openai.ChatCompletion.acreate(
             model=GPT_MODEL,
-            messages=messages  # Только свежий мультимодальный input!
+            messages=messages,
         )
         reply = response["choices"][0]["message"]["content"].strip()
-        # Не нужно добавлять reply обратно в user_context, если не хочешь копить мусор!
         return reply
     except Exception as e:
         logger.exception("Ошибка при вызове OpenAI API (мультимодальный)")
@@ -962,7 +960,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if update.message.caption:
                 content.append({"type": "text", "text": update.message.caption})
             content.append({"type": "image_url", "image_url": {"url": image_data_url}})
-            reply = call_gpt_api_multimodal(user.id, content)
+            reply = await call_gpt_api_multimodal(user.id, content)
             await send_long_message(update, context, reply)
             return
         else:
@@ -1029,8 +1027,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.message.caption:
             content.append({"type": "text", "text": update.message.caption})
         content.append({"type": "image_url", "image_url": {"url": image_data_url}})
-        # --- Вот здесь вызывается НОВЫЙ call_gpt_api_multimodal:
-        reply = call_gpt_api_multimodal(user.id, content)
+        # --- Вот здесь вызывается НОВЫЙ call_gpt_api_multимodal:
+        reply = await call_gpt_api_multimodal(user.id, content)
         await send_long_message(update, context, reply)
     except Exception as e:
         logger.exception("Ошибка при обработке фото")
