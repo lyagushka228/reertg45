@@ -776,16 +776,6 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_context[user.id].append({"role": "system", "content": "Reminder set."})
             return
 
-            dt_str = parsed["datetime"]
-            reminder_txt = parsed["reminder_text"]
-            save_reminder(user.id, dt_str, reminder_txt)
-            await update.message.reply_text(
-                custom_escape_markdown(f"Напоминание сохранено на {dt_str}:\n{reminder_txt}"),
-                parse_mode=ParseMode.MARKDOWN
-            )
-            user_context[user.id].append({"role": "system", "content": "Reminder set."})
-            return
-
     logger.info(f"Пользователь {user.id}: {user_text}")
     if re.match(r"^https?://", user_text):
         if len(user_text) > MAX_URL_LENGTH:
